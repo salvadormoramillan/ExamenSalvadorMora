@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
@@ -18,6 +19,16 @@ public class Jugador : MonoBehaviour
     public float radiosuelo = 0.1f;
     public LayerMask capasuelo;
 
+    [Header("---VIDA---")]
+    public TMP_Text valorvida;
+    private int vida;
+
+    [Header("---AUDIO---")]
+    public AudioSource audioSource;
+    public AudioClip musicamario;
+    public AudioClip SonidoMoneda;
+    
+
     //animacion
     private Animator animator;
 
@@ -25,9 +36,18 @@ public class Jugador : MonoBehaviour
     private Vector3 posicionInicial;
     void Start()
     {
+        vida = 3;
+        valorvida.text = "3";
+
         rb2d = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         posicionInicial = transform.position;
+        audioSource = GetComponent<AudioSource>();
+        audioSource.clip = musicamario;
+        audioSource.loop = true;
+        audioSource.volume = 0.5f;  
+        audioSource.Play();
+
     }
 
     void Update()
@@ -62,24 +82,42 @@ public class Jugador : MonoBehaviour
         }
     }
 
+    public void restavidas()
+    {
+        vida--;
+        valorvida.text = vida.ToString();
+    }
+
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.transform.CompareTag("Moneda"))
         {
             FindAnyObjectByType<GameManager>().sumamonedas();
+            audioSource.PlayOneShot(SonidoMoneda);
             Destroy(collision.gameObject);
         }
         if (collision.CompareTag("SueloMuerte"))
         {
             transform.position = posicionInicial;
             rb2d.velocity = Vector2.zero;
-
-            var game = FindAnyObjectByType<GameManager>();
-            if (game != null)
+            restavidas();
+            if(vida == 0)
             {
-                game.restavidas();
+                SceneManager.LoadScene("Derrota");
             }
-            else {
+            
+        }
+        if (collision.CompareTag("Castillo"))
+        {
+            SceneManager.LoadScene("Victoria");
+        }
+        if (collision.CompareTag("Enemigo"))
+        {
+            transform.position = posicionInicial;
+            rb2d.velocity = Vector2.zero;
+            restavidas();
+            if (vida == 0)
+            {
                 SceneManager.LoadScene("Derrota");
             }
         }
